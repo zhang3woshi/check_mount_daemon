@@ -3,6 +3,15 @@
 go build -o check_mount_daemon check_mount_daemon.go
 ```
 
+将编译后文件放置于/usr/local/bin  
+
+修改config.json配置文件  
+```json
+{
+  "sourceDir": "/vol02/1000-0-122ea9fa/Photos/"
+}
+```
+
 新建服务文件: /etc/systemd/system/check-mount.service  
 ```ini
 [Unit]
