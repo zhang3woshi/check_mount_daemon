@@ -1,3 +1,6 @@
+# 项目简介
+自动在飞牛“我的文件”目录下创建远程挂载目录的软链接，以解决安装盘空间过小无法备份相册问题
+
 编译：  
 ```bash
 go build -o check_mount_daemon check_mount_daemon.go
