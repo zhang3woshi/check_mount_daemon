@@ -18,7 +18,7 @@ go build -o check_mount_daemon check_mount_daemon.go
 }
 ```
 
-## 3. 创建remote问及那
+## 3. 创建remote文件
 在源文件夹根目录创建remote文件，用于判断是否需要再次挂载，例如：/vol02/1000-0-122ea9fa/Photos/remote  
 
 ## 4. 新建服务文件: /etc/systemd/system/check-mount.service  
