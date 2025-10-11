@@ -10,6 +10,13 @@ go build -o check_mount_daemon check_mount_daemon.go
 ```
 
 将编译后文件以及配置文件放置于/usr/local/bin  
+/usr/local/bin  
+
+  ​            |  
+
+​              |----check_mount_daemon  
+
+​              |----config.json  
 
 ## 2. 修改config.json配置文件  
 ```json
