@@ -30,6 +30,15 @@ const (
 // Config 用来保存可配置项
 type Config struct {
 	SourceDir string `json:"sourceDir"`
+	// 新增：支持多个挂载项
+	Mounts []Mount `json:"mounts"`
+}
+
+// Mount 表示一个挂载任务
+type Mount struct {
+	Source    string `json:"source"`
+	Target    string `json:"target"`
+	CheckFile string `json:"checkFile,omitempty"` // 可选，若为空则使用默认 checkFile
 }
 
 // loadConfig 从 config.json 加载配置，如果不存在则返回空配置。
@@ -84,13 +93,44 @@ func loadConfig() Config {
 
 func main() {
 	cfg := loadConfig()
+
+	// 若配置中没有 Mounts，但有旧的 SourceDir，则构造单个 Mounts 条目以保持向后兼容
+	if len(cfg.Mounts) == 0 && cfg.SourceDir != "" {
+		cfg.Mounts = []Mount{{Source: cfg.SourceDir, Target: targetDir, CheckFile: checkFile}}
+	}
+
 	for {
-		checkAndMount(cfg.SourceDir)
+		for _, m := range cfg.Mounts {
+			t := m.Target
+			if t == "" {
+				t = targetDir
+			}
+			cf := m.CheckFile
+			if cf == "" {
+				cf = checkFile
+			}
+			checkAndMountSingle(m.Source, t, cf)
+		}
 		time.Sleep(interval)
 	}
 }
+func checkAndMountSingle(sourceDir, targetDirArg, checkFileArg string) {
+	// 允许传入特定的 targetDir 和 checkFile
+	// 检查源目录是否存在
+	targetDirLocal := targetDirArg
+	checkFileLocal := checkFileArg
 
-func checkAndMount(sourceDir string) {
+	if targetDirLocal == "" {
+		targetDirLocal = targetDir
+	}
+	if checkFileLocal == "" {
+		checkFileLocal = checkFile
+	}
+
+	if _, err := os.Stat(sourceDir); os.IsNotExist(err) {
+		fmt.Printf("[%s] 源目录 %s 不存在，跳过\n", time.Now().Format(time.RFC3339), sourceDir)
+		return
+	}
 	// 检查源目录是否存在
 	if _, err := os.Stat(sourceDir); os.IsNotExist(err) {
 		fmt.Printf("[%s] 源目录 %s 不存在，跳过\n", time.Now().Format(time.RFC3339), sourceDir)
@@ -98,30 +138,30 @@ func checkAndMount(sourceDir string) {
 	}
 
 	// 确保目标目录存在
-	if _, err := os.Stat(targetDir); os.IsNotExist(err) {
-		fmt.Printf("[%s] 目标目录 %s 不存在，正在创建...\n", time.Now().Format(time.RFC3339), targetDir)
-		if err := os.MkdirAll(targetDir, 0755); err != nil {
+	if _, err := os.Stat(targetDirLocal); os.IsNotExist(err) {
+		fmt.Printf("[%s] 目标目录 %s 不存在，正在创建...\n", time.Now().Format(time.RFC3339), targetDirLocal)
+		if err := os.MkdirAll(targetDirLocal, 0755); err != nil {
 			fmt.Printf("[%s] 创建目标目录失败: %v\n", time.Now().Format(time.RFC3339), err)
 			return
 		}
 	}
 
-	// 检查目标目录下是否有 remote 文件
-	targetFile := targetDir + checkFile
+	// 检查目标目录下是否有 checkFile 文件
+	targetFile := filepath.Join(targetDirLocal, checkFileLocal)
 	if _, err := os.Stat(targetFile); err == nil {
-		fmt.Printf("[%s] 挂载正常，无需操作。\n", time.Now().Format(time.RFC3339))
+		fmt.Printf("[%s] 挂载 %s -> %s 正常，无需操作。\n", time.Now().Format(time.RFC3339), sourceDir, targetDirLocal)
 		return
 	}
 
 	// 挂载动作
-	fmt.Printf("[%s] 未检测到 %s，执行挂载...\n", time.Now().Format(time.RFC3339), targetFile)
+	fmt.Printf("[%s] 未检测到 %s，执行挂载 %s -> %s ...\n", time.Now().Format(time.RFC3339), targetFile, sourceDir, targetDirLocal)
 	// 检查是否具有执行 mount 的权限（Unix 需 root）
 	if !isRoot() && runtime.GOOS != "windows" {
 		fmt.Printf("[%s] 挂载需要超级用户权限，请以 root 或使用 sudo 运行程序。\n", time.Now().Format(time.RFC3339))
 		return
 	}
 
-	cmd := exec.Command("mount", "--bind", sourceDir, targetDir)
+	cmd := exec.Command("mount", "--bind", sourceDir, targetDirLocal)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Printf("[%s] 挂载失败: %v\n输出: %s\n", time.Now().Format(time.RFC3339), err, string(output))
