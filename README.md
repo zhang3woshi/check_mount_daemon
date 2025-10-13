@@ -48,7 +48,12 @@ WantedBy=multi-user.target
 ```bash
 sudo systemctl daemon-reload
 sudo systemctl enable --now check-mount.service
+# 停止服务
+sudo systemctl stop check-mount.service
+# 查看状态
+sudo systemctl status check-mount.service
 ```
+
 
 ## TODO
 1. 将项目打包为deb安装包，直接安装使用
