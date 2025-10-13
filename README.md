@@ -18,10 +18,19 @@ go build -o check_mount_daemon check_mount_daemon.go
 
 ​              |----config.json  
 
-## 2. 修改config.json配置文件  
+## 2. 修改config.json配置文件(支持挂载多个目录)  
 ```json
 {
-  "sourceDir": "/vol02/1000-0-122ea9fa/Photos/"
+  "mounts": [
+    {
+      "source": "/vol02/1000-0-1fd91f9b/Picture",
+      "target": "/vol1/1000/Photos/"
+    },
+    {
+      "source": "/vol02/1001-1-750eb99a/Photos",
+      "target": "/vol1/1001/Photos"
+    }
+  ]
 }
 ```
 
