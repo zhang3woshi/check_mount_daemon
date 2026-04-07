@@ -1,0 +1,72 @@
+version: 2
+
+project_name: check_mount_daemon
+
+before:
+  hooks:
+    - go mod download
+
+builds:
+  - id: linux
+    main: ./check_mount_daemon.go
+    binary: check_mount_daemon
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+    goarch:
+      - amd64
+      - arm64
+    ldflags:
+      - -s -w
+
+archives:
+  - id: binary
+    ids:
+      - linux
+    formats:
+      - tar.gz
+    name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+
+checksum:
+  name_template: checksums.txt
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+
+release:
+  github:
+    owner: zhang3woshi
+    name: check_mount_daemon
+
+nfpms:
+  - id: deb
+    package_name: check-mount-daemon
+    ids:
+      - linux
+    formats:
+      - deb
+    bindir: /usr/bin
+    maintainer: zhang3woshi
+    vendor: zhang3woshi
+    homepage: https://github.com/zhang3woshi/check_mount_daemon
+    description: Automatically bind mount remote FNOS photo directories into local Photos paths.
+    section: admin
+    priority: optional
+    contents:
+      - src: ./packaging/config/config.json
+        dst: /etc/check_mount_daemon/config.json
+        type: config|noreplace
+      - src: ./packaging/systemd/check-mount.service
+        dst: /lib/systemd/system/check-mount.service
+    scripts:
+      postinstall: ./packaging/scripts/postinstall.sh
+      preremove: ./packaging/scripts/preremove.sh
+      postremove: ./packaging/scripts/postremove.sh

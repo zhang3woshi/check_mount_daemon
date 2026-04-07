@@ -1,0 +1,9 @@
+{
+  "mounts": [
+    {
+      "source": "/vol02/1000-0-122ea9fa/Photos",
+      "target": "/vol1/1000/Photos",
+      "checkFile": "remote"
+    }
+  ]
+}

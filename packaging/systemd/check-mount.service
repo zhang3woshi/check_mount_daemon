@@ -1,0 +1,15 @@
+[Unit]
+Description=Auto check and bind mount FNOS photo directories
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=root
+Environment=CONFIG_PATH=/etc/check_mount_daemon/config.json
+ExecStart=/usr/bin/check_mount_daemon
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
