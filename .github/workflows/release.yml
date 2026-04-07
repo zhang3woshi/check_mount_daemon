@@ -9,7 +9,7 @@ permissions:
   contents: write
 
 jobs:
-  goreleaser:
+  release:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -23,10 +23,53 @@ jobs:
           go-version-file: go.mod
           cache: true
 
-      - name: Run GoReleaser
+      - name: Build Release Artifacts
         uses: goreleaser/goreleaser-action@v6
         with:
           version: "~> v2"
-          args: release --clean
+          args: release --clean --skip=publish
+
+      - name: Install fnpack
+        run: |
+          curl -L -o /usr/local/bin/fnpack https://static2.fnnas.com/fnpack/fnpack-1.2.1-linux-amd64
+          chmod +x /usr/local/bin/fnpack
+
+      - name: Build fnOS Packages
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          amd64_binary="$(find dist -type f -name check_mount_daemon | grep '/linux_linux_amd64' | head -n 1)"
+          arm64_binary="$(find dist -type f -name check_mount_daemon | grep '/linux_linux_arm64' | head -n 1)"
+
+          test -n "${amd64_binary}"
+          test -n "${arm64_binary}"
+
+          go run ./scripts/build_fpk.go \
+            --fnpack /usr/local/bin/fnpack \
+            --binary "${amd64_binary}" \
+            --version "${version}" \
+            --platform x86 \
+            --stage dist/fpk-x86 \
+            --output "dist/check-mount-daemon_${version}_fnos_x86.fpk"
+
+          go run ./scripts/build_fpk.go \
+            --fnpack /usr/local/bin/fnpack \
+            --binary "${arm64_binary}" \
+            --version "${version}" \
+            --platform arm \
+            --stage dist/fpk-arm \
+            --output "dist/check-mount-daemon_${version}_fnos_arm.fpk"
+
+          sha256sum "dist/check-mount-daemon_${version}_fnos_x86.fpk" >> dist/checksums.txt
+          sha256sum "dist/check-mount-daemon_${version}_fnos_arm.fpk" >> dist/checksums.txt
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/*.deb
+            dist/*.tar.gz
+            dist/*.fpk
+            dist/checksums.txt
+          generate_release_notes: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

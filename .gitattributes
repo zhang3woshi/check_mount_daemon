@@ -3,3 +3,8 @@
 *.service text eol=lf
 *.yml text eol=lf
 *.yaml text eol=lf
+packaging/fnos/template/manifest.tmpl text eol=lf
+packaging/fnos/template/config/* text eol=lf
+packaging/fnos/template/cmd/* text eol=lf
+packaging/fnos/template/app/.gitkeep text eol=lf
+packaging/fnos/template/wizard/.gitkeep text eol=lf

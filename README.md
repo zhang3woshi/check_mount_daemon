@@ -5,6 +5,7 @@
 项目现在已经补齐：
 
 - `.deb` 安装包构建
+- 飞牛 `Native` 应用 `.fpk` 打包
 - `systemd` 服务安装与开机自启
 - GitHub Actions 自动发布到 GitHub Releases
 
@@ -76,6 +77,27 @@ sudo systemctl status check-mount.service
 journalctl -u check-mount.service -f
 ```
 
+## 安装飞牛应用 `.fpk`
+
+仓库现在也会生成飞牛 `Native` 应用包，适合手动安装到 fnOS 上测试：
+
+```bash
+appcenter-cli install-fpk check-mount-daemon_<version>_fnos_x86.fpk
+```
+
+或者先开启手动安装入口，再通过应用中心页面上传安装包：
+
+```bash
+appcenter-cli manual-install enable
+```
+
+说明：
+
+- `fpk` 包内置为无 UI 的服务型应用
+- 应用会以 `root` 权限运行，因为 `mount --bind` 本身需要特权
+- 首次安装会把默认配置复制到应用的 `etc/config.json`
+- 该形态更适合自用或测试安装，不适合作为普通第三方应用上架应用中心
+
 ## 本地构建 `.deb`
 
 建议在 Linux 或 WSL 中执行：
@@ -86,6 +108,28 @@ go run github.com/goreleaser/goreleaser/v2@latest release --snapshot --clean --s
 
 构建产物会输出到 `dist/` 目录。
 
+## 本地构建 `.fpk`
+
+1. 下载官方 `fnpack`
+
+```bash
+curl -L -o fnpack https://static2.fnnas.com/fnpack/fnpack-1.2.1-linux-amd64
+chmod +x fnpack
+```
+
+2. 先编译 Linux 二进制，再打包：
+
+```bash
+GOOS=linux GOARCH=amd64 go build -o dist/check_mount_daemon ./check_mount_daemon.go
+go run ./scripts/build_fpk.go \
+  --fnpack ./fnpack \
+  --binary dist/check_mount_daemon \
+  --version 1.0.1 \
+  --platform x86 \
+  --stage dist/fpk-x86 \
+  --output dist/check-mount-daemon_1.0.1_fnos_x86.fpk
+```
+
 ## 自动发布到 GitHub Releases
 
 仓库已经配置 `.github/workflows/release.yml`。只要创建并推送版本标签，就会自动构建：
@@ -93,6 +137,7 @@ go run github.com/goreleaser/goreleaser/v2@latest release --snapshot --clean --s
 - Linux `amd64` 二进制包
 - Linux `arm64` 二进制包
 - `amd64` / `arm64` 的 `.deb` 安装包
+- `x86` / `arm` 的飞牛 `.fpk` 安装包
 - `checksums.txt`
 
 发布方式：
