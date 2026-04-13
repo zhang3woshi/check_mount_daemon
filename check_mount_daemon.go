@@ -41,15 +41,22 @@ type Mount struct {
 	CheckFile string `json:"checkFile,omitempty"` // 可选，若为空则使用默认 checkFile
 }
 
-// loadConfig 从 config.json 加载配置，如果不存在则返回空配置。
+// loadConfig 从 config.json 加载配置，并返回实际使用的配置文件路径。
 // 环境变量 SOURCE_DIR 会覆盖配置文件中的值。
-func loadConfig() Config {
+func loadConfig() (Config, string, error) {
 	cfg := Config{}
+	configPath := ""
+	var configErr error
 
 	// 1) 如果环境变量指定配置文件路径则优先使用
 	if p := os.Getenv("CONFIG_PATH"); p != "" {
+		configPath = p
 		if data, err := os.ReadFile(p); err == nil {
-			_ = json.Unmarshal(data, &cfg)
+			if err := json.Unmarshal(data, &cfg); err != nil {
+				configErr = fmt.Errorf("parse config %s: %w", p, err)
+			}
+		} else {
+			configErr = fmt.Errorf("read config %s: %w", p, err)
 		}
 	} else {
 		// 2) 否则按候选路径搜索
@@ -62,7 +69,10 @@ func loadConfig() Config {
 
 		for _, c := range candidates {
 			if data, err := os.ReadFile(c); err == nil {
-				_ = json.Unmarshal(data, &cfg)
+				configPath = c
+				if err := json.Unmarshal(data, &cfg); err != nil {
+					configErr = fmt.Errorf("parse config %s: %w", c, err)
+				}
 				break
 			}
 		}
@@ -88,11 +98,19 @@ func loadConfig() Config {
 		cfg.SourceDir = "/vol02/1000-0-122ea9fa/Photos/"
 	}
 
-	return cfg
+	return cfg, configPath, configErr
 }
 
 func main() {
-	cfg := loadConfig()
+	cfg, configPath, err := loadConfig()
+	if err != nil {
+		fmt.Printf("[%s] 加载配置失败: %v\n", time.Now().Format(time.RFC3339), err)
+	}
+	if configPath != "" {
+		fmt.Printf("[%s] 使用配置文件: %s\n", time.Now().Format(time.RFC3339), configPath)
+	} else {
+		fmt.Printf("[%s] 未找到配置文件，使用内置默认配置\n", time.Now().Format(time.RFC3339))
+	}
 
 	// 若配置中没有 Mounts，但有旧的 SourceDir，则构造单个 Mounts 条目以保持向后兼容
 	if len(cfg.Mounts) == 0 && cfg.SourceDir != "" {

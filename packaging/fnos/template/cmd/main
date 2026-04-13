@@ -51,6 +51,10 @@ ensure_runtime_files() {
     fi
 
     touch "${LOG_FILE}"
+    log_msg "Runtime paths: appdest=${TRIM_APPDEST}, pkgetc=${TRIM_PKGETC}, pkgvar=${TRIM_PKGVAR}"
+    log_msg "Binary path: ${BIN_FILE}"
+    log_msg "Config path: ${CONFIG_FILE}"
+    log_msg "Log path: ${LOG_FILE}"
     return 0
 }
 
