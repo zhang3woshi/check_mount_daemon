@@ -4,9 +4,8 @@ set -eu
 
 mkdir -p "${TRIM_PKGETC}" "${TRIM_PKGVAR}"
 
-if [ ! -f "${TRIM_PKGETC}/config.json" ]; then
-    cp "${TRIM_APPDEST}/defaults/config.json" "${TRIM_PKGETC}/config.json"
-fi
+. "$(dirname "$0")/config_common"
+apply_wizard_config_if_present
 
 touch "${TRIM_PKGVAR}/info.log"
 

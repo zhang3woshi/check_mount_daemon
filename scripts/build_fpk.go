@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/binary"
 	"errors"
 	"flag"
 	"fmt"
@@ -33,6 +34,9 @@ func main() {
 
 	if *version == "" || *platform == "" || *binary == "" || *stage == "" || *output == "" {
 		exitErr(errors.New("version, platform, binary, stage and output are required"))
+	}
+	if err := validateBinaryPlatform(*binary, *platform); err != nil {
+		exitErr(err)
 	}
 
 	root, err := os.Getwd()
@@ -89,6 +93,43 @@ func main() {
 	}
 
 	fmt.Println(*output)
+}
+
+// validateBinaryPlatform prevents an amd64 executable from being accidentally
+// packaged as an ARM application (and vice versa). fnOS reports these packages
+// as installed but the service cannot start, so fail during the build instead.
+func validateBinaryPlatform(path, platform string) error {
+	file, err := os.Open(path)
+	if err != nil {
+		return fmt.Errorf("open binary: %w", err)
+	}
+	defer file.Close()
+
+	header := make([]byte, 20)
+	if _, err := io.ReadFull(file, header); err != nil {
+		return fmt.Errorf("read binary header: %w", err)
+	}
+	if string(header[:4]) != "\x7fELF" {
+		return fmt.Errorf("binary %s is not a Linux ELF executable", path)
+	}
+	if header[4] != 2 {
+		return fmt.Errorf("binary %s is not a 64-bit ELF executable", path)
+	}
+
+	machine := binary.LittleEndian.Uint16(header[18:20])
+	var expected uint16
+	switch platform {
+	case "x86":
+		expected = 62 // EM_X86_64
+	case "arm":
+		expected = 183 // EM_AARCH64
+	default:
+		return fmt.Errorf("unsupported fnOS platform %q; expected x86 or arm", platform)
+	}
+	if machine != expected {
+		return fmt.Errorf("binary architecture %d does not match fnOS platform %s", machine, platform)
+	}
+	return nil
 }
 
 func findGeneratedFPK(root, stage string) (string, error) {

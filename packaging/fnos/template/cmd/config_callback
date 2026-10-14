@@ -1,3 +1,8 @@
 #!/bin/bash
 
+set -eu
+
+. "$(dirname "$0")/config_common"
+write_config_from_wizard
+
 exit 0

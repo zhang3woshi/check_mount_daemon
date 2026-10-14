@@ -14,10 +14,10 @@ log_msg() {
 
 check_process() {
     local pid="$1"
-    if [ -n "${pid}" ] && kill -0 "${pid}" 2>/dev/null; then
-        return 0
-    fi
-    return 1
+    [ -n "${pid}" ] || return 1
+    kill -0 "${pid}" 2>/dev/null || return 1
+    [ -r "/proc/${pid}/exe" ] || return 1
+    [ "$(readlink -f "/proc/${pid}/exe")" = "${BIN_FILE}" ]
 }
 
 read_pid() {
@@ -51,6 +51,10 @@ ensure_runtime_files() {
     fi
 
     touch "${LOG_FILE}"
+    log_msg "Runtime paths: appdest=${TRIM_APPDEST}, pkgetc=${TRIM_PKGETC}, pkgvar=${TRIM_PKGVAR}"
+    log_msg "Binary path: ${BIN_FILE}"
+    log_msg "Config path: ${CONFIG_FILE}"
+    log_msg "Log path: ${LOG_FILE}"
     return 0
 }
 

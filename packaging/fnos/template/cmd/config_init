@@ -1,3 +1,10 @@
 #!/bin/bash
 
+set -eu
+
+mkdir -p "${TRIM_PKGETC}"
+if [ ! -f "${TRIM_PKGETC}/config.json" ]; then
+    cp "${TRIM_APPDEST}/defaults/config.json" "${TRIM_PKGETC}/config.json"
+fi
+
 exit 0
