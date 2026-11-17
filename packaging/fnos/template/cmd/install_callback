@@ -6,6 +6,7 @@ mkdir -p "${TRIM_PKGETC}" "${TRIM_PKGVAR}"
 
 . "$(dirname "$0")/config_common"
 apply_wizard_config_if_present
+write_web_password_if_present
 
 touch "${TRIM_PKGVAR}/info.log"
 

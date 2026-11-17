@@ -8,7 +8,7 @@ before:
 
 builds:
   - id: linux
-    main: ./check_mount_daemon.go
+    main: .
     binary: check_mount_daemon
     env:
       - CGO_ENABLED=0

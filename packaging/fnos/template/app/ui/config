@@ -1,0 +1,16 @@
+{
+  ".url": {
+    "zhang3woshi.checkmountdaemon.config": {
+      "title": "挂载配置",
+      "icon": "images/icon_{0}.png",
+      "type": "url",
+      "protocol": "http",
+      "port": "17891",
+      "url": "/",
+      "allUsers": false,
+      "control": {
+        "accessPerm": "readonly"
+      }
+    }
+  }
+}

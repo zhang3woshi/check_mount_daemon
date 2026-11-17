@@ -66,11 +66,21 @@ func main() {
 	if err := os.MkdirAll(filepath.Join(*stage, "app", "defaults"), 0o755); err != nil {
 		exitErr(err)
 	}
+	uiImages := filepath.Join(*stage, "app", "ui", "images")
+	if err := os.MkdirAll(uiImages, 0o755); err != nil {
+		exitErr(err)
+	}
 
 	if err := copyFile(*binary, filepath.Join(*stage, "app", "bin", "check_mount_daemon"), 0o755); err != nil {
 		exitErr(err)
 	}
 	if err := copyFile(defaultConfig, filepath.Join(*stage, "app", "defaults", "config.json"), 0o644); err != nil {
+		exitErr(err)
+	}
+	if err := copyFile(filepath.Join(templateDir, "ICON.PNG"), filepath.Join(uiImages, "icon_64.png"), 0o644); err != nil {
+		exitErr(err)
+	}
+	if err := copyFile(filepath.Join(templateDir, "ICON_256.PNG"), filepath.Join(uiImages, "icon_256.png"), 0o644); err != nil {
 		exitErr(err)
 	}
 

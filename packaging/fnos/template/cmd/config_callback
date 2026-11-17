@@ -4,5 +4,6 @@ set -eu
 
 . "$(dirname "$0")/config_common"
 write_config_from_wizard
+write_web_password_if_present
 
 exit 0

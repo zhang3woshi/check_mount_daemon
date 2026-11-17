@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/sha256"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -39,6 +40,7 @@ type fileSignature struct {
 	Exists  bool
 	Size    int64
 	ModTime time.Time
+	Digest  [sha256.Size]byte
 }
 
 // isRoot 检查当前进程是否以 root 权限运行（仅在类 Unix 系统有效）。
@@ -146,7 +148,11 @@ func signature(path string) fileSignature {
 	if err != nil {
 		return fileSignature{}
 	}
-	return fileSignature{Exists: true, Size: info.Size(), ModTime: info.ModTime()}
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return fileSignature{}
+	}
+	return fileSignature{Exists: true, Size: info.Size(), ModTime: info.ModTime(), Digest: sha256.Sum256(data)}
 }
 
 func logf(format string, args ...interface{}) {
@@ -167,6 +173,18 @@ func main() {
 	} else {
 		logf("未找到配置文件，使用内置默认配置")
 	}
+	webConfigPath := configPath
+	if webConfigPath == "" {
+		webConfigPath = strings.TrimSpace(os.Getenv("CONFIG_PATH"))
+	}
+	if webConfigPath == "" {
+		webConfigPath = "/etc/check_mount_daemon/config.json"
+	}
+	go func() {
+		if err := serveConfigWeb(webConfigPath); err != nil {
+			logf("配置网页启动失败: %v", err)
+		}
+	}()
 
 	lastSignature := signature(configPath)
 	for {

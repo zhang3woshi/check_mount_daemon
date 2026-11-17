@@ -7,6 +7,7 @@
 - `.deb` 安装包构建
 - 飞牛 `Native` 应用 `.fpk` 打包（x86/ARM 架构校验）
 - 飞牛应用中心安装向导和应用设置中的可视化配置
+- 内置网页登录配置中心，支持多挂载项编辑和密码管理
 - `systemd` 服务安装与开机自启
 - GitHub Actions 自动发布到 GitHub Releases
 
@@ -106,10 +107,13 @@ appcenter-cli manual-install enable
 说明：
 
 - `fpk` 包是服务型应用，安装时会显示挂载配置向导；安装后进入应用中心的“应用设置”即可修改源目录、目标目录、检查文件和检查间隔
-- 可视化配置最多提供 3 个挂载项；更多挂载项仍可直接编辑 `etc/config.json`
+- 网页支持最多 20 个挂载项；应用中心安装向导最多配置 3 项
+- 安装后可从应用中心的“挂载配置”入口打开网页，或访问 `http://飞牛地址:17891`
+- 首次启动会生成随机网页密码并写入应用日志；安装向导也可直接设置密码，登录后可在网页中修改密码
 - 应用会以 `root` 权限运行，因为 `mount --bind` 本身需要特权
 - 首次安装会把默认配置复制到应用的 `etc/config.json`
 - 源目录必须存在，并在根目录创建对应的检查文件，例如 `touch /vol02/1000-0-122ea9fa/Photos/remote`
+- 网页使用 HTTP，建议只在可信内网访问，或通过 HTTPS 反向代理访问
 
 应用设置中的“保存并重启”会执行配置回调，守护进程随后自动恢复运行。
 
@@ -135,7 +139,7 @@ chmod +x fnpack
 2. 先编译与飞牛设备匹配的 Linux 二进制，再打包。`--platform arm` 必须使用 `GOARCH=arm64`，`--platform x86` 必须使用 `GOARCH=amd64`；脚本会在打包前检查 ELF 架构：
 
 ```bash
-GOOS=linux GOARCH=amd64 go build -o dist/check_mount_daemon ./check_mount_daemon.go
+GOOS=linux GOARCH=amd64 go build -o dist/check_mount_daemon .
 go run ./scripts/build_fpk.go \
   --fnpack ./fnpack \
   --binary dist/check_mount_daemon \
@@ -148,7 +152,7 @@ go run ./scripts/build_fpk.go \
 ARM 飞牛设备（`uname -m` 通常为 `aarch64`）使用同样流程，但编译时改为 `GOARCH=arm64`，并将平台改为 `arm`：
 
 ```bash
-GOOS=linux GOARCH=arm64 go build -o dist/check_mount_daemon ./check_mount_daemon.go
+GOOS=linux GOARCH=arm64 go build -o dist/check_mount_daemon .
 go run ./scripts/build_fpk.go \
   --fnpack ./fnpack \
   --binary dist/check_mount_daemon \

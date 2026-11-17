@@ -48,6 +48,22 @@ validate_interval() {
     fi
 }
 
+write_web_password_if_present() {
+    local password="${wizard_web_password:-}"
+    if [ -z "${password}" ]; then
+        return 0
+    fi
+    if [ "${#password}" -lt 16 ] || [ "${#password}" -gt 128 ] || [[ "${password}" == *$'\n'* ]] || [[ "${password}" == *$'\r'* ]]; then
+        fail_config "网页管理密码长度必须为 16 到 128 个字符，且不能包含换行"
+        return 1
+    fi
+    mkdir -p "${TRIM_PKGVAR}"
+    local temporary_file="${TRIM_PKGVAR}/web_password.tmp.$$"
+    (umask 077; printf '%s' "${password}" > "${temporary_file}")
+    chmod 0600 "${temporary_file}"
+    mv -f "${temporary_file}" "${TRIM_PKGVAR}/web_password"
+}
+
 append_mount() {
     local source="$1"
     local target="$2"

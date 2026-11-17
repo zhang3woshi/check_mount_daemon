@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#f4f6fa">
+  <title>远程相册挂载 · 配置</title>
+  <style>
+    :root {
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+      color: #182333;
+      background: #f4f6fa;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+      --blue: #2563eb;
+      --muted: #69778a;
+      --border: #dce3ed;
+      --surface: #fff;
+      --danger: #bd3644;
+      --success: #16804a;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; }
+    button, input { font: inherit; }
+    button { cursor: pointer; }
+    .topbar {
+      height: 64px; display: flex; align-items: center; gap: 12px;
+      padding: 0 max(22px, calc((100vw - 1040px) / 2));
+      background: rgba(255,255,255,.88); border-bottom: 1px solid var(--border);
+    }
+    .brand-mark {
+      width: 34px; height: 34px; display: grid; place-items: center;
+      border-radius: 11px; color: white; background: linear-gradient(145deg,#3478fa,#1748bb);
+      box-shadow: 0 5px 14px #2563eb30;
+    }
+    .brand-name { font-weight: 650; letter-spacing: .01em; }
+    .brand-subtitle { margin-left: auto; color: var(--muted); font-size: 13px; }
+    main { max-width: 920px; margin: 42px auto 72px; padding: 0 22px; }
+    .heading { margin-bottom: 25px; }
+    .eyebrow { color: var(--blue); font-size: 12px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+    h1 { margin: 8px 0 8px; font-size: clamp(26px, 4vw, 34px); letter-spacing: -.035em; }
+    .lead { margin: 0; color: var(--muted); line-height: 1.7; }
+    .card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+      box-shadow: 0 10px 34px rgba(26,45,78,.055); overflow: hidden;
+    }
+    .card-head { padding: 21px 24px; border-bottom: 1px solid var(--border); }
+    .card-head h2 { margin: 0; font-size: 17px; }
+    .card-head p { margin: 6px 0 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .card-body { padding: 24px; }
+    .login-wrap { max-width: 480px; margin: 0 auto; }
+    .field { display: grid; gap: 8px; margin-bottom: 18px; }
+    .field label { font-size: 13px; font-weight: 600; }
+    .field input {
+      width: 100%; min-height: 43px; padding: 10px 12px;
+      border: 1px solid #cfd8e5; border-radius: 9px; color: #182333; background: white;
+      outline: none; transition: border-color .15s, box-shadow .15s;
+    }
+    .field input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px #2563eb1a; }
+    .field input::placeholder { color: #a0aaba; }
+    .help { color: var(--muted); font-size: 12px; line-height: 1.55; }
+    .actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+    .button {
+      min-height: 40px; padding: 9px 15px; border: 1px solid transparent; border-radius: 9px;
+      background: var(--blue); color: white; font-size: 13px; font-weight: 650;
+      transition: background .15s, transform .15s;
+    }
+    .button:hover { background: #1d52cb; }
+    .button:active { transform: translateY(1px); }
+    .button:disabled { opacity: .6; cursor: wait; }
+    .button-secondary { color: #314158; background: #fff; border-color: var(--border); }
+    .button-secondary:hover { background: #f7f9fc; }
+    .button-danger { background: white; color: var(--danger); border-color: #f0cbd0; }
+    .button-danger:hover { background: #fff5f5; }
+    .status { min-height: 21px; margin: 12px 0 0; color: var(--muted); font-size: 13px; line-height: 1.6; }
+    .status.error { color: var(--danger); }
+    .status.success { color: var(--success); }
+    .section-top { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; }
+    .section-top h3 { margin: 0; font-size: 15px; }
+    .mount-list { display: grid; gap: 14px; }
+    .mount-card { padding: 18px; border: 1px solid var(--border); border-radius: 12px; background: #fbfcfe; }
+    .mount-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; }
+    .mount-title { display: flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 700; }
+    .mount-number { width: 25px; height: 25px; display: grid; place-items: center; border-radius: 8px; color: #2855a9; background: #e9f0ff; font-size: 12px; }
+    .remove-button { padding: 5px 8px; border: 0; border-radius: 7px; color: var(--danger); background: transparent; font-size: 12px; }
+    .remove-button:hover { background: #fff0f1; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+    .full { grid-column: 1 / -1; }
+    .interval-row { display: grid; grid-template-columns: minmax(180px, 1fr) 1fr; align-items: end; gap: 16px; padding-top: 23px; }
+    .interval-row .field { max-width: 280px; margin-bottom: 0; }
+    .divider { height: 1px; margin: 24px 0; background: var(--border); }
+    .bottom-actions { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-top: 24px; }
+    details.password-details { margin-top: 4px; }
+    details summary { color: #34455e; cursor: pointer; font-size: 13px; font-weight: 650; }
+    .password-form { max-width: 480px; margin-top: 17px; }
+    .hidden { display: none !important; }
+    .footnote { margin: 19px 2px 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+    @media (max-width: 640px) {
+      main { margin-top: 28px; padding: 0 14px; }
+      .topbar { padding: 0 15px; }
+      .brand-subtitle { font-size: 11px; }
+      .card-head, .card-body { padding: 18px; }
+      .grid { grid-template-columns: 1fr; gap: 0; }
+      .full { grid-column: auto; }
+      .interval-row { grid-template-columns: 1fr; }
+      .interval-row .field { max-width: none; }
+      .bottom-actions { align-items: stretch; flex-direction: column-reverse; }
+      .bottom-actions .actions { justify-content: space-between; }
+      .bottom-actions > .button { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand-mark" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 7.5h16M7 4v7m10-7v7M5 13h14v7H5v-7Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M9 16.5h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+    </div>
+    <div class="brand-name">远程相册挂载</div>
+    <div class="brand-subtitle">本地配置中心</div>
+  </header>
+  <main>
+    <section class="heading">
+      <div class="eyebrow">Settings</div>
+      <h1>挂载配置</h1>
+      <p class="lead">管理源目录与本地目标目录之间的 bind mount。更改保存后，守护进程会自动重新加载。</p>
+    </section>
+
+    <section id="login-card" class="card hidden" aria-labelledby="login-title">
+      <div class="card-head"><h2 id="login-title">登录配置中心</h2><p>输入设备上保存的网页管理密码后即可编辑配置。</p></div>
+      <div class="card-body login-wrap">
+        <form id="login-form">
+          <div class="field"><label for="login-password">管理密码</label><input id="login-password" name="password" type="password" autocomplete="current-password" required autofocus placeholder="输入管理密码"></div>
+          <div class="actions"><button class="button" type="submit">登录</button></div>
+          <p id="login-status" class="status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+
+    <section id="config-card" class="card hidden" aria-labelledby="config-title">
+      <div class="card-head"><h2 id="config-title">挂载项</h2><p>源目录必须存在，并包含检查文件。目标目录会在挂载时自动创建。</p></div>
+      <div class="card-body">
+        <form id="config-form">
+          <div class="section-top"><h3>目录对应关系</h3><button id="add-mount" class="button button-secondary" type="button">＋ 添加挂载项</button></div>
+          <div id="mount-list" class="mount-list"></div>
+          <div class="interval-row">
+            <div class="field"><label for="interval">检查间隔</label><input id="interval" type="number" min="5" max="86400" step="1" required><span class="help">每 5 到 86400 秒检查一次</span></div>
+            <div class="help">发现检查文件缺失时会尝试恢复挂载。请确认源目录和目标目录填写正确。</div>
+          </div>
+          <p id="config-status" class="status" role="status" aria-live="polite"></p>
+        </form>
+        <div class="bottom-actions">
+          <details class="password-details">
+            <summary>修改网页管理密码</summary>
+            <form id="password-form" class="password-form">
+              <div class="field"><label for="new-password">新密码</label><input id="new-password" type="password" minlength="16" maxlength="128" autocomplete="new-password" required><span class="help">至少 16 个字符。保存后需要使用新密码重新登录。</span></div>
+              <button class="button button-secondary" type="submit">更新密码</button>
+              <p id="password-status" class="status" role="status" aria-live="polite"></p>
+            </form>
+          </details>
+          <div class="actions"><button id="logout" class="button button-secondary" type="button">退出登录</button><button id="save-config" class="button" type="submit" form="config-form">保存配置</button></div>
+        </div>
+      </div>
+    </section>
+    <p class="footnote">管理页面使用随机初始密码保护。首次启动后，请在飞牛应用日志中查看密码；登录后可在本页修改。</p>
+  </main>
+
+  <script src="/app.js" defer></script>
+</body>
+</html>

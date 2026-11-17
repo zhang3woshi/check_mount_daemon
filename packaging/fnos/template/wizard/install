@@ -99,6 +99,15 @@
           { "required": true, "message": "请输入检查间隔" },
           { "pattern": "^[0-9]+$", "message": "请输入数字" }
         ]
+      },
+      {
+        "type": "password",
+        "field": "wizard_web_password",
+        "label": "网页管理密码（可选）",
+        "initValue": "",
+        "rules": [
+          { "pattern": "^$|^.{16,128}$", "message": "密码长度必须为 16 到 128 个字符" }
+        ]
       }
     ]
   }

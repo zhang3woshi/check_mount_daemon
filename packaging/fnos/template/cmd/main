@@ -51,6 +51,7 @@ ensure_runtime_files() {
     fi
 
     touch "${LOG_FILE}"
+    chmod 0600 "${LOG_FILE}"
     log_msg "Runtime paths: appdest=${TRIM_APPDEST}, pkgetc=${TRIM_PKGETC}, pkgvar=${TRIM_PKGVAR}"
     log_msg "Binary path: ${BIN_FILE}"
     log_msg "Config path: ${CONFIG_FILE}"
@@ -67,7 +68,7 @@ start_process() {
     ensure_runtime_files || return 1
 
     log_msg "Starting process ..."
-    CONFIG_PATH="${CONFIG_FILE}" "${BIN_FILE}" >> "${LOG_FILE}" 2>&1 &
+    CONFIG_PATH="${CONFIG_FILE}" WEB_PASSWORD_FILE="${TRIM_PKGVAR}/web_password" "${BIN_FILE}" >> "${LOG_FILE}" 2>&1 &
     pid="$!"
     printf "%s" "${pid}" > "${PID_FILE}"
     sleep 1
